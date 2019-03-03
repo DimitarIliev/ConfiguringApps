@@ -1,21 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ConfiguringApps.Infrastructure;
+﻿using ConfiguringApps.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ConfiguringApps
 {
-    public class Startup
+    public class StartupDevelopment
     {
         public IConfigurationRoot Configuration { get; set; }
-        public Startup(IHostingEnvironment env)
+        public StartupDevelopment(IHostingEnvironment env)
         {
             Configuration = new ConfigurationBuilder() //step 1: create new ConfigurationBuilder object
                 .SetBasePath(env.ContentRootPath)
@@ -24,21 +23,19 @@ namespace ConfiguringApps
                 .Build(); //step 3: call Build() method which creates the structure of key/value pairs and sections and assigns the result to the Configuration property
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<UptimeService>();
-            services.AddMvc().AddMvcOptions(options =>
-            {
-                options.RespectBrowserAcceptHeader = true;
-            });
+            services.AddMvc();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
-            app.UseExceptionHandler("/Home/Error");
+            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            loggerFactory.AddDebug(LogLevel.Debug);
+            app.UseDeveloperExceptionPage();
+            app.UseStatusCodePages();
+            app.UseBrowserLink();
             app.UseStaticFiles();
             app.UseMvc(routes =>
             {
